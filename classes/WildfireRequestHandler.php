@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * Request handler
+ */
 class WildfireRequestHandler {
 	public function route(array $segments = array()) {
 		$page = array_shift($segments);
@@ -26,6 +28,7 @@ class WildfireRequestHandler {
 	protected function serveGetAll($segments) {
 
 		elgg_push_breadcrumb(elgg_echo('wildfire:title'));
+		elgg_register_title_button();
 
 		$content = elgg_list_entities(array(
 			'type' => 'object',
@@ -43,6 +46,7 @@ class WildfireRequestHandler {
 	protected function serveGetOwner($segments) {
 
 		$owner = elgg_get_page_owner_entity();
+		elgg_register_title_button();
 
 		elgg_push_breadcrumb(elgg_echo('wildfire:title'), 'wildfire/all');
 		elgg_push_breadcrumb($owner->name);
@@ -64,6 +68,7 @@ class WildfireRequestHandler {
 	protected function serveGetFriends($segments) {
 
 		$owner = elgg_get_page_owner_entity();
+		elgg_register_title_button();
 
 		elgg_push_breadcrumb(elgg_echo('wildfire:title'), 'wildfire/all');
 		elgg_push_breadcrumb($owner->name, "wildfire/owner/$owner->username");
@@ -105,5 +110,44 @@ class WildfireRequestHandler {
 		);
 	}
 
+	protected function serveGetAdd($segments) {
+		elgg_push_breadcrumb(elgg_echo('wildfire:add'));
+
+		$title = elgg_echo('wildfire:add');
+
+		$form_vars = array(
+			'enctype' => 'multipart/form-data',
+		);
+		$body_vars = $this->prepareUploadFormVars();
+		$content = elgg_view_form('wildfire/add', $form_vars, $body_vars);
+
+		return array(
+			'title' => $title,
+			'content' => $content,
+			'filter' => '',
+		);
+	}
+
+	protected function prepareUploadFormVars() {
+		// input names => defaults
+		$values = array(
+			'title' => '',
+			'description' => '',
+			'access_id' => ACCESS_DEFAULT,
+			'tags' => '',
+			'container_guid' => elgg_get_page_owner_guid(),
+		);
+
+		if (elgg_is_sticky_form('wildfire')) {
+			$sticky_values = elgg_get_sticky_values('wildfire');
+			foreach ($sticky_values as $key => $value) {
+				$values[$key] = $value;
+			}
+		}
+
+		elgg_clear_sticky_form('wildfire');
+
+		return $values;
+	}
 }
 
